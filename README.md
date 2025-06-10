@@ -11,4 +11,4 @@
 
 - Scrapes resale ticket prices from Ticketmaster using Selenium WebDriver.
 - Sends email notifications if ticket prices go below your target price.
-- Runs automatically on a schedule using cron
+- Runs automatically on a schedule using cron.
