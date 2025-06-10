@@ -21,4 +21,8 @@
 .DS_Store
 Thumbs.db
 
+run_track_tickets.sh
+
 chromedriver
+
+cron_log.txt
