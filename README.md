@@ -19,7 +19,7 @@
 
 Make sure you have Ruby and Bundler installed. Then install required gems:
 
-```bash
+bash
 bundle install
 
 ### 2. Add ChromeDriver to Project Folder
@@ -30,15 +30,16 @@ Download the correct version of [ChromeDriver] and place it in the **root folder
 
 Create a file named `.env` in the root directory of the project, and add your email credentials:
 
-```env
+```bash
 EMAIL_USERNAME=your_email@gmail.com
 EMAIL_PASSWORD=your_app_password
 EMAIL_TO=recipient_email@gmail.com
+```
 
 ## 🖥️ Run the Script
 
 Run the script from your terminal:
 
-```bash
+bash
 ruby ticket_tracker.rb
 
