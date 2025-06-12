@@ -12,6 +12,7 @@
 - Scrapes resale ticket prices from Ticketmaster using Selenium WebDriver.
 - Sends email notifications if ticket prices go below your target price.
 - Runs periodically (looped script).
+- Note: This is programmed for Lollapalooza Verified Resale Tickets
 
 ## ⚙️ Setup Instructions
 
