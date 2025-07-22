@@ -7,7 +7,9 @@ loop do
   options = Selenium::WebDriver::Chrome::Options.new
   options.add_argument('--headless')
 
-  driver = Selenium::WebDriver.for(:chrome, options: options)
+  # Specify chromedriver path
+  service = Selenium::WebDriver::Service.chrome(path: './chromedriver')
+  driver = Selenium::WebDriver.for(:chrome, service: service, options: options)
   driver.get("https://www.ticketexchangebyticketmaster.com/grant-park-chicago/lollapalooza-tickets-chicago-il/tickets/4542048")
 
   wait = Selenium::WebDriver::Wait.new(timeout: 60)
@@ -20,12 +22,22 @@ loop do
     price_text = price_element.text.strip
     puts "Ticket price loaded: #{price_text}"
 
+    # Check quantity (with fallback)
+    begin
+      quantity_element = driver.find_element(css: 'select[data-testid="quantity-select"] option[selected]')
+      quantity = quantity_element.text.to_i
+      puts "Ticket quantity: #{quantity}"
+    rescue Selenium::WebDriver::Error::NoSuchElementError
+      quantity = 1  # Default to 1 if quantity selector not found
+      puts "Ticket quantity: #{quantity} (default - selector not found)"
+    end
+
     # Remove non-numeric characters and convert to float
     numeric_price = price_text.gsub(/[^\d.]/, '').to_f 
     puts "Numeric price: $#{numeric_price}"
 
-    # Check price threshold
-    if numeric_price < 600
+    # Check price threshold AND quantity >= 1
+    if numeric_price < 600 && quantity >= 1
       puts "📬 Price is below $600! Sending email..."
 
       Mail.defaults do
@@ -39,12 +51,16 @@ loop do
         }
       end
 
+      # Create quantity message
+      quantity_msg = quantity == 1 ? "1 ticket" : "#{quantity} tickets (multiple available!)"
+      
       Mail.deliver do
         to ENV['EMAIL_TO']
         from ENV['EMAIL_USERNAME']
-        subject "🔥 Lolla Ticket Alert: $#{numeric_price}"
+        subject "🔥 Lolla Ticket Alert: $#{numeric_price} - #{quantity_msg}"
         body <<~BODY
           A resale ticket is now available for $#{numeric_price}!
+          Quantity available: #{quantity_msg}
 
           Check the link here:
           https://www.ticketexchangebyticketmaster.com/grant-park-chicago/lollapalooza-tickets-chicago-il/tickets/4542048
@@ -53,7 +69,7 @@ loop do
 
       puts "✅ Email sent!"
     else
-      puts "ℹ️ Price is above $600, no email sent."
+      puts "ℹ️ Price is above $600 or no tickets available, no email sent."
     end
 
   rescue Selenium::WebDriver::Error::TimeoutError
