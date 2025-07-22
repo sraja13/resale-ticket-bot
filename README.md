@@ -179,6 +179,8 @@ sudo journalctl -u ticket-monitor -f
 
 ### Adapting for Other Ticket Websites
 
+### *Currently Adapted For Lollapalooza Verified TicketMaster Exchange Website*
+
 **1. Update Target URL** (Line 11):
 ```ruby
 driver.get("YOUR_TICKET_URL_HERE")
