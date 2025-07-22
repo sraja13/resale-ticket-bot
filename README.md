@@ -281,7 +281,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🙋‍♂️ Contact
 
-**Sahana Raja** - [sahana.raja@gmail.com](mailto:sahana.raja@gmail.com)
+**Sahana Raja** - [sraja11@jhu.edu](mailto:sraja11@jhu.edu)
 
 Project Link: [https://github.com/sraja13/resale-ticket-bot](https://github.com/sraja13/resale-ticket-bot)
 
