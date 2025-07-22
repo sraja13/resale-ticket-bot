@@ -1,4 +1,4 @@
-# 🎟️ Automated Ticket Price Monitor
+# 🤖 Resale Ticket Bot
 
 ![Ruby](https://img.shields.io/badge/ruby-%23CC342D.svg?style=for-the-badge&logo=ruby&logoColor=white)
 ![Selenium](https://img.shields.io/badge/Selenium-%2300A0DC.svg?style=for-the-badge&logo=selenium&logoColor=white)
@@ -57,8 +57,8 @@ sudo gem install bundler
 
 ### 1. Clone Repository
 ```bash
-git clone https://github.com/sahana/ticket-price-monitor.git
-cd ticket-price-monitor
+git clone https://github.com/sraja13/resale-ticket-bot.git
+cd resale-ticket-bot
 ```
 
 ### 2. Install Dependencies
@@ -283,7 +283,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 **Sahana Raja** - [sahana.raja@gmail.com](mailto:sahana.raja@gmail.com)
 
-Project Link: [https://github.com/sahana/ticket-price-monitor](https://github.com/sahana/ticket-price-monitor)
+Project Link: [https://github.com/sraja13/resale-ticket-bot](https://github.com/sraja13/resale-ticket-bot)
 
 ---
 
