@@ -15,61 +15,89 @@ loop do
   wait = Selenium::WebDriver::Wait.new(timeout: 60)
 
   begin
-    # Wait for ticket price element to appear
-    price_element = wait.until { driver.find_element(id: 'ticket-allinprice-string-16') }
-
-    # Extract price and convert to float
-    price_text = price_element.text.strip
-    puts "Ticket price loaded: #{price_text}"
-
-    # Check quantity (with fallback)
-    begin
-      quantity_element = driver.find_element(css: 'select[data-testid="quantity-select"] option[selected]')
-      quantity = quantity_element.text.to_i
-      puts "Ticket quantity: #{quantity}"
-    rescue Selenium::WebDriver::Error::NoSuchElementError
-      quantity = 1  # Default to 1 if quantity selector not found
-      puts "Ticket quantity: #{quantity} (default - selector not found)"
-    end
-
-    # Remove non-numeric characters and convert to float
-    numeric_price = price_text.gsub(/[^\d.]/, '').to_f 
-    puts "Numeric price: $#{numeric_price}"
-
-    # Check price threshold AND quantity >= 1
-    if numeric_price < 600 && quantity >= 1
-      puts "📬 Price is below $600! Sending email..."
-
-      Mail.defaults do
-        delivery_method :smtp, {
-          address: "smtp.gmail.com",
-          port: 587,
-          user_name: ENV['EMAIL_USERNAME'],
-          password: ENV['EMAIL_PASSWORD'],
-          authentication: 'plain',
-          enable_starttls_auto: true
+    # Wait for page to load
+    wait.until { driver.find_element(css: '.quantity-val') }
+    
+    # Find all ticket listings
+    ticket_listings = driver.find_elements(css: '.quantity-val')
+    puts "Found #{ticket_listings.length} ticket listings"
+    
+    best_single_ticket = nil
+    all_tickets = []
+    
+    ticket_listings.each_with_index do |listing, index|
+      begin
+        # Get quantity for this listing
+        quantity_span = listing.find_element(css: 'span:first-child')
+        quantity = quantity_span.text.to_i
+        
+        # Get price for this listing - find the price element in the same container
+        price_container = listing.find_element(xpath: './ancestor::*[contains(@class, "tmr-repeater-item") or contains(@class, "ticket-item") or contains(@class, "listing")]')
+        price_element = price_container.find_element(css: '[id*="ticket-allinprice-string"], .price, [class*="price"]')
+        price_text = price_element.text.strip
+        numeric_price = price_text.gsub(/[^\d.]/, '').to_f
+        
+        ticket_info = {
+          index: index + 1,
+          quantity: quantity,
+          price: numeric_price,
+          price_text: price_text
         }
+        all_tickets << ticket_info
+        
+        # Track best single ticket
+        if quantity == 1 && (best_single_ticket.nil? || numeric_price < best_single_ticket[:price])
+          best_single_ticket = ticket_info
+        end
+        
+        puts "Listing #{index + 1}: #{quantity} ticket(s) at $#{numeric_price}"
+        
+      rescue => e
+        puts "Error processing listing #{index + 1}: #{e.message}"
       end
-
-      # Create quantity message
-      quantity_msg = quantity == 1 ? "1 ticket" : "#{quantity} tickets (multiple available!)"
+    end
+    
+    # Report findings
+    puts "\n📊 SUMMARY:"
+    puts "Total listings found: #{all_tickets.length}"
+    puts "Single tickets available: #{all_tickets.count { |t| t[:quantity] == 1 }}"
+    
+    if best_single_ticket
+      puts "🎯 Best single ticket: $#{best_single_ticket[:price]}"
       
-      Mail.deliver do
-        to ENV['EMAIL_TO']
-        from ENV['EMAIL_USERNAME']
-        subject "🔥 Lolla Ticket Alert: $#{numeric_price} - #{quantity_msg}"
-        body <<~BODY
-          A resale ticket is now available for $#{numeric_price}!
-          Quantity available: #{quantity_msg}
+      # Check if we should send alert
+      if best_single_ticket[:price] < 670
+        puts "📬 Single ticket under $670 found! Sending email..."
+        
+        Mail.defaults do
+          delivery_method :smtp, {
+            address: "smtp.gmail.com",
+            port: 587,
+            user_name: ENV['EMAIL_USERNAME'],
+            password: ENV['EMAIL_PASSWORD'],
+            authentication: 'plain',
+            enable_starttls_auto: true
+          }
+        end
 
-          Check the link here:
-          https://www.ticketexchangebyticketmaster.com/grant-park-chicago/lollapalooza-tickets-chicago-il/tickets/4542048
-        BODY
+        Mail.deliver do
+          to ENV['EMAIL_TO']
+          from ENV['EMAIL_USERNAME']
+          subject "🔥 Lolla Ticket Alert: $#{best_single_ticket[:price]} - 1 ticket"
+          body <<~BODY
+            A single resale ticket is now available for $#{best_single_ticket[:price]}!
+            
+            Check the link here:
+            https://www.ticketexchangebyticketmaster.com/grant-park-chicago/lollapalooza-tickets-chicago-il/tickets/4542048
+          BODY
+        end
+
+        puts "✅ Email sent!"
+      else
+        puts "ℹ️ Best single ticket ($#{best_single_ticket[:price]}) is above $670 threshold."
       end
-
-      puts "✅ Email sent!"
     else
-      puts "ℹ️ Price is above $600 or no tickets available, no email sent."
+      puts "❌ No single tickets available - only group tickets found."
     end
 
   rescue Selenium::WebDriver::Error::TimeoutError
